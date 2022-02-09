@@ -5,6 +5,7 @@ import {
 	CardTitle,	
 	Row,
 	Col,
+	CustomInput
 
 } from 'reactstrap';
 import { History } from '../../../utils/History';
@@ -18,11 +19,22 @@ import { APP_CONSTANTS } from '../../../constants';
 
 const { PAGE_LIMIT } = APP_CONSTANTS;
 
+const FILTER = {
+	all:{
+		value:null
+	},
+	seen:{
+		value:true
+	},
+	unseen:{
+		value:false
+	}
+}
 function List() {
 
   const [notifications,setNotifications] = useState(null);
 	const [totalRecords, setTotalRecords] = useState(null);
-
+const [filter,setFilter] = useState({})
   const getIcons = notification=>{
 		const iconConfig = CONFIG.ICONS(notification?.notificationType)
 			return{
@@ -33,7 +45,8 @@ function List() {
 
   const fetchNotifications = useCallback(async(query={})=>{
     try{
-      const params= { start: 0, limit: PAGE_LIMIT, ...query };
+
+      const params= { start: 0, limit: PAGE_LIMIT,...filter, ...query };
       const list= await Notification_Service.listNotifications(params)
       let {total,data} = list
       setTotalRecords(total)
@@ -50,7 +63,7 @@ function List() {
     }catch(err){
 
     }
-  },[])
+  },[filter])
 
 	const onPageChanged = useCallback(
 		async paginationData => {			
@@ -87,6 +100,13 @@ function List() {
 		 handleNotificationSeen(id)
 	},[handleNotificationSeen,notifications])
 
+
+	const handleFilterChange = e => {
+		let { value } = e.target;
+		 value = FILTER[value].value
+		setFilter({status: value})	
+	};
+
   useEffect(()=>{
     fetchNotifications()
 
@@ -106,15 +126,25 @@ function List() {
 										display: 'flex'
 									}}
 								>
-							
-								
+								<CustomInput
+										type="select"
+										id="exampleCustomSelect"
+										name="customSelect"
+										defaultValue=""
+										onChange={handleFilterChange}
+										style={{ width: 'auto', marginRight: '5px' }}
+									>
+										<option value="all">All</option>
+										<option value="seen">Seen</option>
+										<option value="unseen">Unseen</option>
+									</CustomInput>								
 								</div>
 							</Col>
 						
 						</Row>
 					</CardTitle>
 					<CardBody className="mailbox">
-          <div className={"message-center notifications"}>
+          		<div className={"message-center notifications"}>
 								{notifications?.length ? (
 									notifications.map((notification, index) => (
                     <span className={`message-item ${!notification.status&&"bg-info bg-opacity-10"}`} key={index}
